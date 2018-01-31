@@ -1,0 +1,65 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <LinearLayout
+        android:id="@+id/flight_params_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <android.support.design.widget.TextInputLayout
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/departure_input_layout"
+            style="@style/AppInputLayout"
+            android:layout_marginTop="8dp"
+            android:focusableInTouchMode="true"
+            android:tag="legalfirstname"
+            app:counterEnabled="false">
+
+            <EditText
+                android:id="@+id/departure_place_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/search_fragment_departure_text"
+                android:inputType="text"
+                android:lines="1"
+                android:textSize="16sp" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/arrival_input_layout"
+            style="@style/AppInputLayout"
+            android:layout_marginTop="8dp"
+            android:focusableInTouchMode="true"
+            android:tag="arrival_layout"
+            app:counterEnabled="false">
+
+            <EditText
+                android:id="@+id/arrival_place_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/search_fragment_arrival_text"
+                android:inputType="text"
+                android:lines="1"
+                android:textSize="16sp" />
+
+        </android.support.design.widget.TextInputLayout>
+
+    </LinearLayout>
+
+    <Button
+        android:layout_below="@+id/flight_params_view"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/find_flights_button"
+        android:layout_width="240dp"
+        android:layout_height="48dp"
+        android:textAllCaps="false"
+        android:textSize="16sp"
+        android:text="@string/search_fragment_find_text" />
+
+</RelativeLayout>

@@ -1,13 +1,10 @@
 package ru.fargus.testapp.network;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
-
-import java.util.concurrent.TimeUnit;
 
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -18,7 +15,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitClient {
 
     private static ApiService api;
-    private final String BASE_URL = "https://yasen.hotellook.com/";
+    private HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY);
+
     private static RetrofitClient ourInstance = new RetrofitClient();
 
 
@@ -27,12 +25,16 @@ public class RetrofitClient {
     }
 
     private RetrofitClient() {
-        OkHttpClient okHttpClient = new OkHttpClient.Builder().build();
+
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .addInterceptor(loggingInterceptor)
+                .build();
 
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
+                .baseUrl(ApiConfig.BASE_URL)
                 .client(okHttpClient)
-                .addConverterFactory(GsonConverterFactory.create()).addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io()))
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
 

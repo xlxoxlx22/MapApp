@@ -1,37 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <LinearLayout
-        android:id="@+id/flight_params_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <AutoCompleteTextView
-            android:hint="Откуда"
-            android:id="@+id/departure_place_text_view"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <AutoCompleteTextView
-            android:hint="Куда"
-            android:id="@+id/arrival_place_text_view"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-    </LinearLayout>
-
-    <Button
-        android:layout_below="@+id/flight_params_view"
-        android:layout_centerHorizontal="true"
-        android:id="@+id/pick_flights_button"
-        android:layout_width="240dp"
-        android:layout_height="48dp"
-        android:textAllCaps="false"
-        android:text="Найти" />
-
-</RelativeLayout>
+</FrameLayout>
