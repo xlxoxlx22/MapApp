@@ -16,6 +16,6 @@ import ru.fargus.testapp.model.RequestResponse;
 public interface ApiService {
 
     @GET(ApiConfig.AUTOCOMPLETE_PATH)
-    Observable<RequestResponse> getCitiesList(@Query("term") String term, @Query("lang") String lang);
+    Observable<RequestResponse> getCitiesList(@Query(ApiConfig.PARAM_TERM) String term, @Query(ApiConfig.PARAM_LANGUAGE) String lang);
 
 }

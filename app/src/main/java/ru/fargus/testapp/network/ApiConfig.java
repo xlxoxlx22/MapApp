@@ -8,4 +8,6 @@ public class ApiConfig {
 
     public static final String BASE_URL = "https://yasen.hotellook.com/";
     public static final String AUTOCOMPLETE_PATH = "autocomplete";
+    public static final String PARAM_TERM = "term";
+    public static final String PARAM_LANGUAGE = "lang";
 }
