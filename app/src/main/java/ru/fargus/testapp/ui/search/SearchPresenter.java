@@ -12,11 +12,10 @@ import ru.fargus.testapp.ui.base.BaseView;
  * Created by Дмитрий on 31.01.2018.
  */
 
-public class SearchPresenter<T extends BaseView> implements BasePresenter<T> {
+public class SearchPresenter<T extends SearchView> implements BasePresenter<T> {
 
     private T mView;
     private ApiService mApiService;
-    private RetrofitClient mRetrofitClient;
 
     @SuppressWarnings("unchecked")
     public SearchPresenter(T view){
@@ -36,11 +35,6 @@ public class SearchPresenter<T extends BaseView> implements BasePresenter<T> {
         mView = null;
     }
 
-    public T getView() {
-        return mView;
-    }
-
-    public void startMapActivity(){}
 
 
 
@@ -60,8 +54,11 @@ public class SearchPresenter<T extends BaseView> implements BasePresenter<T> {
                         }
                     }
                 }, throwable -> mView.showErrorMessage(throwable.getLocalizedMessage()));
+    }
 
-
-
+    public void findFlight() {
+        if (mView != null) {
+            mView.openMapActivity();
+        }
     }
 }

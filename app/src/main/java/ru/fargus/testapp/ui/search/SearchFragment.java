@@ -20,11 +20,12 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import ru.fargus.testapp.R;
+import ru.fargus.testapp.helpers.ToastHelper;
 import ru.fargus.testapp.model.City;
-import ru.fargus.testapp.ui.base.BaseView;
-import ru.fargus.testapp.utils.SnackBarHelper;
+import ru.fargus.testapp.ui.map.MapActivity;
+import ru.fargus.testapp.helpers.SnackBarHelper;
 
-public class SearchFragment extends Fragment implements BaseView{
+public class SearchFragment extends Fragment implements SearchView{
 
     private View mView;
     private Unbinder mViewsUnbinder;
@@ -53,17 +54,7 @@ public class SearchFragment extends Fragment implements BaseView{
         mView = inflater.inflate(R.layout.fragment_search, container, false);
         mViewsUnbinder = ButterKnife.bind(this, mView);
 
-        RxTextView.textChanges(mDepartureInput)
-                .debounce(250, TimeUnit.MILLISECONDS)
-                .filter(charSequence -> charSequence.length() > 0)
-                .subscribe(inputTest -> mSearchPresenter.obtainCitiesList(inputTest.toString()));
-
-
-
-        RxView.clicks(mFindFlightsButton).subscribe(o -> {
-            // закрыывть клавиатуру нужно
-            SnackBarHelper.showSnackbarMessage(mView, "Нажали на кнопку \"Найти\"");
-        });
+       setUiListeners();
         return mView;
     }
 
@@ -81,15 +72,42 @@ public class SearchFragment extends Fragment implements BaseView{
     @Override
     public void onDetach() {
         super.onDetach();
+        mSearchPresenter.detachView();
     }
+
+
+    private void setUiListeners(){
+        RxTextView.textChanges(mDepartureInput)
+                .debounce(250, TimeUnit.MILLISECONDS)
+                .filter(charSequence -> charSequence.length() > 0)
+                .map(charSequence -> charSequence.toString().trim())
+                .subscribe(inputText -> mSearchPresenter.obtainCitiesList(inputText));
+
+        RxTextView.textChanges(mArrivalInput)
+                .debounce(250, TimeUnit.MILLISECONDS)
+                .filter(charSequence -> charSequence.length() > 0)
+                .map(charSequence -> charSequence.toString().trim())
+                .subscribe(inputText -> mSearchPresenter.obtainCitiesList(inputText));
+
+        RxView.clicks(mFindFlightsButton).subscribe(o -> mSearchPresenter.findFlight());
+    }
+
+
+
 
     @Override
     public void updateCitiesList(List<City> cities) {
-        Log.i(TAG, "Load city list with size = " + cities.size());
+        ToastHelper.showToastMessage(getActivity(),
+                "Load city list with size = " + cities.size());
     }
 
     @Override
     public void showErrorMessage(String errorMessage) {
-        SnackBarHelper.showSnackbarMessage(mView, errorMessage);
+        ToastHelper.showToastMessage(getActivity(), errorMessage);
+    }
+
+    @Override
+    public void openMapActivity() {
+        MapActivity.startActivity(getActivity());
     }
 }

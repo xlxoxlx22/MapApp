@@ -1,5 +1,8 @@
 package ru.fargus.testapp.ui.map;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
@@ -15,6 +18,14 @@ import ru.fargus.testapp.R;
 public class MapActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+
+
+    public static void startActivity(Activity activity) {
+        if (activity != null) {
+            Intent intent = new Intent(activity, MapActivity.class);
+            activity.startActivity(intent);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -79,9 +79,6 @@ public class Hotel {
     @SerializedName("address")
     @Expose
     private String address;
-    @SerializedName("photos")
-    @Expose
-    private List<Integer> photos = null;
 
     public Object getState() {
         return state;
@@ -265,13 +262,5 @@ public class Hotel {
 
     public void setAddress(String address) {
         this.address = address;
-    }
-
-    public List<Integer> getPhotos() {
-        return photos;
-    }
-
-    public void setPhotos(List<Integer> photos) {
-        this.photos = photos;
     }
 }

@@ -9,6 +9,6 @@ import ru.fargus.testapp.model.City;
  */
 
 public interface BaseView {
-    void updateCitiesList(List<City> cities);
+
     void showErrorMessage(String errorMessage);
 }
