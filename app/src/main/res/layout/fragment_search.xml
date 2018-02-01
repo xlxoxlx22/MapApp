@@ -19,12 +19,13 @@
             android:tag="legalfirstname"
             app:counterEnabled="false">
 
-            <EditText
+            <AutoCompleteTextView
                 android:id="@+id/departure_place_text_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/search_fragment_departure_text"
                 android:inputType="text"
+                android:completionThreshold="1"
                 android:lines="1"
                 android:textSize="16sp" />
 
@@ -34,17 +35,20 @@
             xmlns:app="http://schemas.android.com/apk/res-auto"
             android:id="@+id/arrival_input_layout"
             style="@style/AppInputLayout"
+            android:completionThreshold="1"
             android:layout_marginTop="8dp"
             android:focusableInTouchMode="true"
             android:tag="arrival_layout"
             app:counterEnabled="false">
 
-            <EditText
+            <AutoCompleteTextView
+                style="@style/AppInputLayout"
                 android:id="@+id/arrival_place_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/search_fragment_arrival_text"
                 android:inputType="text"
+                android:completionThreshold="1"
                 android:lines="1"
                 android:textSize="16sp" />
 
