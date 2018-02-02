@@ -8,6 +8,10 @@ import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import org.parceler.Parcel;
+import org.parceler.ParcelFactory;
+
+@Parcel
 public class City {
 
     @SerializedName("countryCode")
@@ -61,9 +65,37 @@ public class City {
     @SerializedName("_score")
     @Expose
     private Integer score;
-    @SerializedName("state")
-    @Expose
-    private Object state;
+
+
+//    @ParcelFactory
+//    public static City create(City cityObject) {
+//        return new City(cityObject);
+//    }
+
+
+//
+//    public City(City cityObject) {
+//        super();
+//        this.countryCode = cityObject.getCountryCode();
+//        this.country = cityObject.getCountry();
+//        this.latinFullName = cityObject.getLatinFullName();
+//        this.fullname = cityObject.getFullname();
+//        this.clar = cityObject.getClar();
+//        this.latinClar = cityObject.getLatinClar();
+//        this.location = cityObject.getLocation();
+//        this.hotelsCount = cityObject.getHotelsCount();
+//        this.iata = cityObject.getIata();
+//        this.city = cityObject.getCity();
+//        this.latinCity = cityObject.getLatinCity();
+//        this.timezone = cityObject.getTimezone();
+//        this.timezonesec = cityObject.getTimezonesec();
+//        this.latinCountry = cityObject.getLatinCountry();
+//        this.id = cityObject.getId();
+//        this.countryId = cityObject.getCountryId();
+//        this.score = cityObject.getScore();
+//        this.state = cityObject.getState();
+//    }
+
 
     public String getCountryCode() {
         return countryCode;
@@ -199,14 +231,6 @@ public class City {
 
     public void setScore(Integer score) {
         this.score = score;
-    }
-
-    public Object getState() {
-        return state;
-    }
-
-    public void setState(Object state) {
-        this.state = state;
     }
 
 }

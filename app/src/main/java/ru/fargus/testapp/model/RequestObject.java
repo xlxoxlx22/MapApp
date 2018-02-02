@@ -16,11 +16,15 @@ public class RequestObject {
     @SerializedName("lang")
     String mLanguage;
 
-    public RequestObject(String term) {
+    SearchType mType;
+
+    public RequestObject(String term, SearchType type) {
         this.mTerm = term;
+        this.mType = type;
         this.mLanguage = REQUEST_OBJECT_LANGUAGE;
     }
 
     public String getTerm() {return mTerm;}
     public String getLanguage() {return mLanguage;}
+    public SearchType getSearchType() {return mType;}
 }

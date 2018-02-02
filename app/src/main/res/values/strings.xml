@@ -1,14 +1,15 @@
 <resources>
     <string name="app_name">TestApp</string>
-    <string name="title_activity_destination">Destination</string>
+    <string name="title_activity_destination">Map</string>
     <string name="title_activity_search">Search</string>
+
+
+    <string name="search_fragment_departure_text">Departure city</string>
+    <string name="search_fragment_arrival_text">Arrival city</string>
+    <string name="search_fragment_find_text">Search</string>
+    <string name="list_item_name_text">Title</string>
+    <string name="list_item_code_text">Code</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-
-    <string name="search_fragment_departure_text">Откуда</string>
-    <string name="search_fragment_arrival_text">Куда</string>
-    <string name="search_fragment_find_text">Найти</string>
-    <string name="list_item_name_text">Название</string>
-    <string name="list_item_code_text">Код</string>
 </resources>

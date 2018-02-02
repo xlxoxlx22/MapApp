@@ -22,6 +22,7 @@ import butterknife.Unbinder;
 import ru.fargus.testapp.R;
 import ru.fargus.testapp.helpers.ToastHelper;
 import ru.fargus.testapp.model.City;
+import ru.fargus.testapp.model.SearchType;
 import ru.fargus.testapp.ui.map.MapActivity;
 import ru.fargus.testapp.ui.search.adapter.CitiesAdapter;
 
@@ -81,22 +82,19 @@ public class SearchFragment extends Fragment implements SearchView{
 
 
     private void setupUIListeners(){
-        mSearchPresenter.addDisposable(
-                RxTextView.textChanges(mDepartureInput)
-                        .debounce(250, TimeUnit.MILLISECONDS)
-                        .map(charSequence -> charSequence.toString().trim())
-                        .filter(inputText -> inputText.length() > 0)
-                        .subscribe(inputText -> mSearchPresenter.obtainCitiesList(inputText))
 
+        mSearchPresenter.addDisposable(
+                RxTextView.afterTextChangeEvents(mDepartureInput)
+                        .debounce(250, TimeUnit.MILLISECONDS)
+                        .subscribe(event -> mSearchPresenter.obtainCities(event.view().getText().toString(), SearchType.SEARCH_TYPE_DEPARTURE))
         );
 
         mSearchPresenter.addDisposable(
-                RxTextView.textChanges(mArrivalInput)
+                RxTextView.afterTextChangeEvents(mArrivalInput)
                         .debounce(250, TimeUnit.MILLISECONDS)
-                        .filter(charSequence -> charSequence.length() > 2)
-                        .map(charSequence -> charSequence.toString().trim())
-                        .subscribe(inputText -> mSearchPresenter.obtainCitiesList(inputText))
+                        .subscribe(event -> mSearchPresenter.obtainCities(event.view().getText().toString(), SearchType.SEARCH_TYPE_ARRIVAL))
         );
+
 
         mSearchPresenter.addDisposable(
                 RxView.clicks(mFindFlightsButton)
@@ -108,24 +106,30 @@ public class SearchFragment extends Fragment implements SearchView{
     public void setupAdapters() {
         mDepartureAdapter = new CitiesAdapter(getActivity(), R.layout.list_item_city, new ArrayList<City>());
         mDepartureInput.setAdapter(mDepartureAdapter);
+        mDepartureInput.setOnItemClickListener((adapterView, view, position, id) -> {
+            City currentCity = (City) adapterView.getItemAtPosition(position);
+            mSearchPresenter.setSelectedCityForKey("departure", currentCity);
+        });
 
         mArrivalAdapter = new CitiesAdapter(getActivity(), R.layout.list_item_city, new ArrayList<City>());
         mArrivalInput.setAdapter(mArrivalAdapter);
+        mArrivalInput.setOnItemClickListener((adapterView, view, position, id) -> {
+            City currentCity = (City) adapterView.getItemAtPosition(position);
+            mSearchPresenter.setSelectedCityForKey("arrival", currentCity);
+        });
     }
 
 
 
     @Override
-    public void updateCitiesList(List<City> cities) {
-        if (mDepartureAdapter == null) {
-            mDepartureAdapter = new CitiesAdapter(getActivity(), R.layout.list_item_city, cities);
-            mDepartureInput.setAdapter(mDepartureAdapter);
-        } else {
-            mDepartureAdapter.clear();
-            mDepartureAdapter.addAll(cities);
-        }
-        mDepartureAdapter.notifyDataSetChanged();
+    public void updateCitiesList(List<City> cities, SearchType type) {
 
+        CitiesAdapter adapter = getAdapterForSearchType(type);
+        if (adapter != null) {
+            adapter.clear();
+            adapter.addAll(cities);
+            adapter.notifyDataSetChanged();
+        }
     }
 
     @Override
@@ -135,6 +139,23 @@ public class SearchFragment extends Fragment implements SearchView{
 
     @Override
     public void openMapActivity() {
-        MapActivity.startActivity(getActivity());
+        MapActivity.buildIntent(getActivity(), mSearchPresenter.getmExtraParamsBundle());
+    }
+
+    @Override
+    public CitiesAdapter getAdapterForSearchType(SearchType searchType) {
+        CitiesAdapter adapter;
+        switch (searchType) {
+            case SEARCH_TYPE_ARRIVAL:
+                adapter = mArrivalAdapter;
+                break;
+            case SEARCH_TYPE_DEPARTURE:
+                adapter = mDepartureAdapter;
+                break;
+            default:
+                adapter = new CitiesAdapter(getActivity(), R.layout.list_item_city, new ArrayList<City>());
+                break;
+        }
+        return adapter;
     }
 }

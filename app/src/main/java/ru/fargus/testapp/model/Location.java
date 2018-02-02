@@ -8,6 +8,9 @@ package ru.fargus.testapp.model;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import org.parceler.Parcel;
+
+@Parcel
 public class Location {
 
     @SerializedName("lat")
@@ -16,6 +19,13 @@ public class Location {
     @SerializedName("lon")
     @Expose
     private Double lon;
+
+    public Location() {}
+
+    public Location(double lat, double lon){
+        this.lat = lat;
+        this.lon = lon;
+    }
 
     public Double getLat() {
         return lat;

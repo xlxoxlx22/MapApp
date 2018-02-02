@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">TestApp</string>
+    <string name="title_activity_destination">Карта</string>
+    <string name="title_activity_search">Поиск</string>
+
+
+    <string name="search_fragment_departure_text">Город отправления</string>
+    <string name="search_fragment_arrival_text">Город назначения</string>
+    <string name="search_fragment_find_text">Поиск</string>
+    <string name="list_item_name_text">Название</string>
+    <string name="list_item_code_text">Код</string>
+</resources>
