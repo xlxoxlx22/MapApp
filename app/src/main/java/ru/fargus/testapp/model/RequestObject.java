@@ -2,6 +2,8 @@ package ru.fargus.testapp.model;
 
 import com.google.gson.annotations.SerializedName;
 
+import ru.fargus.testapp.ui.search.constants.SearchType;
+
 /**
  * Created by Дмитрий on 01.02.2018.
  */

@@ -8,15 +8,18 @@
         android:id="@+id/flight_params_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
         android:orientation="vertical">
 
         <android.support.design.widget.TextInputLayout
             xmlns:app="http://schemas.android.com/apk/res-auto"
             android:id="@+id/departure_input_layout"
             style="@style/AppInputLayout"
-            android:layout_marginTop="8dp"
-            android:focusableInTouchMode="true"
-            android:tag="legalfirstname"
             app:counterEnabled="false">
 
             <AutoCompleteTextView
@@ -26,6 +29,7 @@
                 android:hint="@string/search_fragment_departure_text"
                 android:inputType="text"
                 android:completionThreshold="1"
+                android:imeOptions="actionDone"
                 android:lines="1"
                 android:textSize="16sp" />
 
@@ -37,8 +41,6 @@
             style="@style/AppInputLayout"
             android:completionThreshold="1"
             android:layout_marginTop="8dp"
-            android:focusableInTouchMode="true"
-            android:tag="arrival_layout"
             app:counterEnabled="false">
 
             <AutoCompleteTextView
@@ -49,6 +51,7 @@
                 android:hint="@string/search_fragment_arrival_text"
                 android:inputType="text"
                 android:completionThreshold="1"
+                android:imeOptions="actionDone"
                 android:lines="1"
                 android:textSize="16sp" />
 
@@ -57,13 +60,14 @@
     </LinearLayout>
 
     <Button
-        android:layout_below="@+id/flight_params_view"
-        android:layout_centerHorizontal="true"
         android:id="@+id/find_flights_button"
         android:layout_width="240dp"
         android:layout_height="48dp"
         android:textAllCaps="false"
         android:textSize="16sp"
-        android:text="@string/search_fragment_find_text" />
+        android:layout_marginTop="8dp"
+        android:text="@string/search_fragment_find_text"
+        android:layout_below="@+id/flight_params_view"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

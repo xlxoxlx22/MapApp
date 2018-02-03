@@ -45,8 +45,8 @@ public class MapActivity extends FragmentActivity implements MapView, OnMapReady
         mMapPresenter = new MapPresenter(this);
         if (intent != null && intent.getExtras() != null) {
             Bundle arguments = intent.getExtras();
-            arrivalCity = Parcels.unwrap(arguments.getParcelable(MapConfig.ARRIVAL_PARAM));
-            departureCity = Parcels.unwrap(arguments.getParcelable(MapConfig.DEPARTURE_PARAM));
+            arrivalCity = Parcels.unwrap(arguments.getParcelable(MapConfig.MAP_ARRIVAL_PARAM));
+            departureCity = Parcels.unwrap(arguments.getParcelable(MapConfig.MAP_DEPARTURE_PARAM));
         }
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()

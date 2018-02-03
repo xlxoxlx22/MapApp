@@ -14,7 +14,7 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="@string/google_maps_key" />
+            android:value="AIzaSyDglh8N3ZNfSEDzl2lFwxtO58JpBCLl8hs" />
 
         <activity
             android:name=".ui.map.MapActivity"
@@ -22,6 +22,7 @@
         </activity>
 
         <activity android:name=".ui.search.SearchActivity"
+            android:windowSoftInputMode="stateAlwaysHidden"
             android:label="@string/title_activity_search">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

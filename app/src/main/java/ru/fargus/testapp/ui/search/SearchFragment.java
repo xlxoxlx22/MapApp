@@ -22,9 +22,10 @@ import butterknife.Unbinder;
 import ru.fargus.testapp.R;
 import ru.fargus.testapp.helpers.ToastHelper;
 import ru.fargus.testapp.model.City;
-import ru.fargus.testapp.model.SearchType;
 import ru.fargus.testapp.ui.map.MapActivity;
 import ru.fargus.testapp.ui.search.adapter.CitiesAdapter;
+import ru.fargus.testapp.ui.search.constants.SearchConfig;
+import ru.fargus.testapp.ui.search.constants.SearchType;
 
 public class SearchFragment extends Fragment implements SearchView{
 
@@ -86,13 +87,13 @@ public class SearchFragment extends Fragment implements SearchView{
         mSearchPresenter.addDisposable(
                 RxTextView.afterTextChangeEvents(mDepartureInput)
                         .debounce(250, TimeUnit.MILLISECONDS)
-                        .subscribe(event -> mSearchPresenter.obtainCities(event.view().getText().toString(), SearchType.SEARCH_TYPE_DEPARTURE))
+                        .subscribe(event -> mSearchPresenter.loadCities(event.view().getText().toString(), SearchType.SEARCH_TYPE_DEPARTURE))
         );
 
         mSearchPresenter.addDisposable(
                 RxTextView.afterTextChangeEvents(mArrivalInput)
                         .debounce(250, TimeUnit.MILLISECONDS)
-                        .subscribe(event -> mSearchPresenter.obtainCities(event.view().getText().toString(), SearchType.SEARCH_TYPE_ARRIVAL))
+                        .subscribe(event -> mSearchPresenter.loadCities(event.view().getText().toString(), SearchType.SEARCH_TYPE_ARRIVAL))
         );
 
 
@@ -108,14 +109,14 @@ public class SearchFragment extends Fragment implements SearchView{
         mDepartureInput.setAdapter(mDepartureAdapter);
         mDepartureInput.setOnItemClickListener((adapterView, view, position, id) -> {
             City currentCity = (City) adapterView.getItemAtPosition(position);
-            mSearchPresenter.setSelectedCityForKey("departure", currentCity);
+            mSearchPresenter.setSelectedCityForKey(SearchConfig.SEARCH_DEPARTURE_PARAM, currentCity);
         });
 
         mArrivalAdapter = new CitiesAdapter(getActivity(), R.layout.list_item_city, new ArrayList<City>());
         mArrivalInput.setAdapter(mArrivalAdapter);
         mArrivalInput.setOnItemClickListener((adapterView, view, position, id) -> {
             City currentCity = (City) adapterView.getItemAtPosition(position);
-            mSearchPresenter.setSelectedCityForKey("arrival", currentCity);
+            mSearchPresenter.setSelectedCityForKey(SearchConfig.SEARCH_ARRIVAL_PARAM, currentCity);
         });
     }
 
@@ -139,7 +140,7 @@ public class SearchFragment extends Fragment implements SearchView{
 
     @Override
     public void openMapActivity() {
-        MapActivity.buildIntent(getActivity(), mSearchPresenter.getmExtraParamsBundle());
+        MapActivity.buildIntent(getActivity(), mSearchPresenter.getExtraParamsBundle());
     }
 
     @Override

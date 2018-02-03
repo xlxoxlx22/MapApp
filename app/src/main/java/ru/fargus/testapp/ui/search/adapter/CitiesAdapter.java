@@ -74,7 +74,6 @@ public class CitiesAdapter extends ArrayAdapter<City> {
 
         public void bindItem(City cityItem){
             mCityNameView.setText(cityItem.getFullname());
-            mCityNameView.setOnClickListener(view -> Log.e(getClass().getSimpleName(), "click on item = " + cityItem.getCity()));
 
             if (cityItem.getIata().size() > 0) {
                 mCityIataCodeView.setText(cityItem.getIata().get(0));
@@ -96,7 +95,7 @@ public class CitiesAdapter extends ArrayAdapter<City> {
     Filter nameFilter = new Filter() {
         @Override
         public CharSequence convertResultToString(Object resultValue) {
-            String str = ((City) resultValue).getCity();
+            String str = ((City) resultValue).getFullname();
             return str;
         }
 
@@ -107,7 +106,7 @@ public class CitiesAdapter extends ArrayAdapter<City> {
 
                 String filterString = constraint.toString().toLowerCase();
                 for (City city : tempResultItems) {
-                    if (city.getCity().toLowerCase().contains(filterString)) {
+                    if (city.getFullname().toLowerCase().contains(filterString)) {
                         filterSuggestions.add(city);
                     }
                 }

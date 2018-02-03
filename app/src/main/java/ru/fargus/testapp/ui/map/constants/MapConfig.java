@@ -6,6 +6,6 @@ package ru.fargus.testapp.ui.map.constants;
 
 public class MapConfig {
 
-    public static final String ARRIVAL_PARAM = "arrival";
-    public static final String DEPARTURE_PARAM = "departure";
+    public static final String MAP_ARRIVAL_PARAM = "arrival";
+    public static final String MAP_DEPARTURE_PARAM = "departure";
 }

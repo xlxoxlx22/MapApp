@@ -1,4 +1,4 @@
-package ru.fargus.testapp.model;
+package ru.fargus.testapp.ui.search.constants;
 
 /**
  * Created by admin on 01.02.18.
