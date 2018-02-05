@@ -2,6 +2,7 @@ package ru.fargus.testapp.ui.map;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
@@ -11,6 +12,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import org.parceler.Parcels;
 
@@ -69,7 +71,20 @@ public class MapActivity extends FragmentActivity implements MapView, OnMapReady
         mMap.addMarker(new MarkerOptions().position(departurePoint).title(mMapPresenter.getIataCode(departureCity)));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(mMapPresenter.getMiddlePoint(departureLocation, arrivalLocation)));
 
-        // построить ломанную линию и запустить анимацию
+
+        mMap.addPolyline(new PolylineOptions()
+                .add(departurePoint, arrivalPoint)
+                .width(MapConfig.MAP_INITIAL_STROKE_WIDTH_PX)
+                .color(Color.BLUE)
+                .geodesic(true));
+
+
+        // построить ломанную линию
+        // прописать тип этой линии (рунктирная)
+        // и запустить анимацию движения самолетика
+        // чисто внешне поменять иконки маркеров
+
+
     }
 
 
