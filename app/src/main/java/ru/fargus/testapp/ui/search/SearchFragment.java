@@ -134,7 +134,7 @@ public class SearchFragment extends Fragment implements SearchView{
     }
 
     @Override
-    public void showErrorMessage(String errorMessage) {
+    public void showToastMessage(String errorMessage) {
         ToastHelper.showToastMessage(getActivity(), errorMessage);
     }
 

@@ -2,9 +2,13 @@ package ru.fargus.testapp.ui.map;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Color;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.location.Location;
+import android.location.LocationManager;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.view.View;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -12,20 +16,20 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.Polyline;
 
 import org.parceler.Parcels;
 
 import ru.fargus.testapp.R;
 import ru.fargus.testapp.helpers.ToastHelper;
 import ru.fargus.testapp.model.City;
-import ru.fargus.testapp.model.Location;
 import ru.fargus.testapp.ui.map.constants.MapConfig;
 
 public class MapActivity extends FragmentActivity implements MapView, OnMapReadyCallback {
 
     private GoogleMap mMap;
     private City arrivalCity;
+    private Bitmap mMapMarker;
     private City departureCity;
     private MapPresenter mMapPresenter;
 
@@ -51,6 +55,7 @@ public class MapActivity extends FragmentActivity implements MapView, OnMapReady
             departureCity = Parcels.unwrap(arguments.getParcelable(MapConfig.MAP_DEPARTURE_PARAM));
         }
 
+        mMapMarker = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_plane);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -61,35 +66,32 @@ public class MapActivity extends FragmentActivity implements MapView, OnMapReady
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        Location arrivalLocation = arrivalCity.getLocation();
-        Location departureLocation = departureCity.getLocation();
 
-        LatLng arrivalPoint = new LatLng(arrivalLocation.getLat(), arrivalLocation.getLon());
-        LatLng departurePoint = new LatLng(departureLocation.getLat(), departureLocation.getLon());
+        LatLng arrivalPoint = mMapPresenter.getArrivalPoint(arrivalCity);
+        LatLng departurePoint = mMapPresenter.getDeparturePoint(departureCity);
+        Polyline route = mMap.addPolyline(mMapPresenter.getRouteForPoints(departurePoint, arrivalPoint));
 
-        mMap.addMarker(new MarkerOptions().position(arrivalPoint).title(mMapPresenter.getIataCode(arrivalCity)));
-        mMap.addMarker(new MarkerOptions().position(departurePoint).title(mMapPresenter.getIataCode(departureCity)));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(mMapPresenter.getMiddlePoint(departureLocation, arrivalLocation)));
+        mMapPresenter.setRouteStyle(route);
+
+        Location source = new Location(LocationManager.GPS_PROVIDER);
+        source.setLatitude(departurePoint.latitude);
+        source.setLongitude(departurePoint.longitude);
+
+        View arrivalLayout = getLayoutInflater().inflate(R.layout.map_marker_layout, null);
+        View departureLayout = getLayoutInflater().inflate(R.layout.map_marker_layout, null);
+        mMap.addMarker(mMapPresenter.addMapMarker(arrivalPoint, mMapPresenter.getIataCode(arrivalCity), arrivalLayout));
+        mMap.addMarker(mMapPresenter.addMapMarker(departurePoint, mMapPresenter.getIataCode(departureCity), departureLayout));
 
 
-        mMap.addPolyline(new PolylineOptions()
-                .add(departurePoint, arrivalPoint)
-                .width(MapConfig.MAP_INITIAL_STROKE_WIDTH_PX)
-                .color(Color.BLUE)
-                .geodesic(true));
 
-
-        // построить ломанную линию
-        // прописать тип этой линии (рунктирная)
-        // и запустить анимацию движения самолетика
-        // чисто внешне поменять иконки маркеров
-
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(mMapPresenter.getMiddlePoint(departureCity.getLocation(), arrivalCity.getLocation())));
+        mMapPresenter.moveMarkerAnimation(mMap, mMapMarker,departurePoint, arrivalPoint, 5000);
 
     }
 
 
     @Override
-    public void showErrorMessage(String errorMessage) {
+    public void showToastMessage(String errorMessage) {
         ToastHelper.showToastMessage(this, errorMessage);
     }
 }

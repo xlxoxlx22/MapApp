@@ -10,5 +10,5 @@ import ru.fargus.testapp.model.City;
 
 public interface BaseView {
 
-    void showErrorMessage(String errorMessage);
+    void showToastMessage(String errorMessage);
 }

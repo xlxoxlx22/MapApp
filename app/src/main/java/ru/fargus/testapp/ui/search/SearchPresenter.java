@@ -74,10 +74,10 @@ public class SearchPresenter<T extends SearchView> implements BasePresenter<T> {
                         if (response != null) {
                             mView.updateCitiesList(filterCitiesList(response.getCities(), inputText), searchType);
                         } else {
-                            mView.showErrorMessage("response is null");
+                            mView.showToastMessage("response is null");
                         }
                     }
-                }, throwable -> mView.showErrorMessage(throwable.getLocalizedMessage()));
+                }, throwable -> mView.showToastMessage(throwable.getLocalizedMessage()));
     }
 
 
