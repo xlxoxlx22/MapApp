@@ -19,8 +19,8 @@ public class MapConfig {
     public static final long MAP_MARKER_MOVEMENT_ANIMATION_DURATION = 50000;
     public static final long MAP_MARKER_ROTATE_ANIMATION_DURATION = 2000;
 
-    public static final int MAP_PATTERN_GAP_LENGTH_PX = 10;
-    public static final int MAP_POLYLINE_STROKE_WIDTH_PX = 12;
+    public static final int MAP_PATTERN_GAP_LENGTH_PX = 12;
+    public static final int MAP_POLYLINE_STROKE_WIDTH_PX = 10;
 
     public static final Dot MAP_DOT = new Dot();
     public static final Gap MAP_GAP = new Gap(MAP_PATTERN_GAP_LENGTH_PX);

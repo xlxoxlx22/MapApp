@@ -142,8 +142,8 @@ public class MapPresenter<T extends MapView> implements BasePresenter<T> {
 
         return new PolylineOptions()
                 .add(departurePoint, arrivalPoint)
-                .color(Color.GRAY)
-                .geodesic(false);
+                .color(Color.BLUE)
+                .geodesic(true);
     }
 
     public void setRouteStyle(Polyline polyline){
@@ -170,6 +170,7 @@ public class MapPresenter<T extends MapView> implements BasePresenter<T> {
     public MarkerOptions addMapMarker(LatLng point, String title, View markerView){
         return new MarkerOptions()
                 .position(point)
+                .zIndex(0.5f)
                 .icon(BitmapDescriptorFactory.fromBitmap(createMapMarkerView(markerView, title)));
     }
 
