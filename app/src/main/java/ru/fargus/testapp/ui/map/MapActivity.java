@@ -13,8 +13,11 @@ import android.view.View;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 
@@ -79,13 +82,18 @@ public class MapActivity extends FragmentActivity implements MapView, OnMapReady
 
         View arrivalLayout = getLayoutInflater().inflate(R.layout.map_marker_layout, null);
         View departureLayout = getLayoutInflater().inflate(R.layout.map_marker_layout, null);
-        mMap.addMarker(mMapPresenter.addMapMarker(arrivalPoint, mMapPresenter.getIataCode(arrivalCity), arrivalLayout));
-        mMap.addMarker(mMapPresenter.addMapMarker(departurePoint, mMapPresenter.getIataCode(departureCity), departureLayout));
-
-
-
+        Marker startPoint = mMap.addMarker(mMapPresenter.addMapMarker(arrivalPoint, mMapPresenter.getIataCode(arrivalCity), arrivalLayout));
+        Marker endPoint = mMap.addMarker(mMapPresenter.addMapMarker(departurePoint, mMapPresenter.getIataCode(departureCity), departureLayout));
+        Marker planeMarker = mMap.addMarker(new MarkerOptions()
+                .position(startPoint.getPosition())
+                .anchor(0.0f , 0.0f)
+                .zIndex(1.0f)
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_plane)));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(mMapPresenter.getMiddlePoint(departureCity.getLocation(), arrivalCity.getLocation())));
-        mMapPresenter.moveMarkerAnimation(mMap, mMapMarker,departurePoint, arrivalPoint, 5000);
+
+        mMapPresenter.animateMarker(endPoint, planeMarker);
+
+//        mMapPresenter.moveMarkerAnimation(mMap, mMapMarker,departurePoint, arrivalPoint, 5000);
 
     }
 

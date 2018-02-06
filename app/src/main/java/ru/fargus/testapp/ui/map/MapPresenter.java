@@ -1,22 +1,29 @@
 package ru.fargus.testapp.ui.map;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
@@ -173,6 +180,84 @@ public class MapPresenter<T extends MapView> implements BasePresenter<T> {
                 .zIndex(0.5f)
                 .icon(BitmapDescriptorFactory.fromBitmap(createMapMarkerView(markerView, title)));
     }
+
+
+
+    public void getMapVisualRect(GoogleMap map, Window window) {
+        LatLngBounds visibleRegion = map.getProjection().getVisibleRegion().latLngBounds;
+        Point topLeft = new Point(0, 0);
+        Point bottomRight = new Point(window.getDecorView().getRight(), window.getDecorView().getBottom());
+
+
+    }
+
+
+
+
+
+    public void animateMarker(Marker endMarker, final Marker movingMarker) {
+        if (movingMarker != null) {
+
+            final LatLng endPosition = endMarker.getPosition();
+            final LatLng startPosition = movingMarker.getPosition();
+            final float startRotation = movingMarker.getRotation();
+
+            final LatLngInterpolator latLngInterpolator = new LatLngInterpolator.LinearFixed();
+            ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, 1);
+            valueAnimator.setDuration(1000); // duration 1 second
+            valueAnimator.setInterpolator(new LinearInterpolator());
+            valueAnimator.addUpdateListener(animation -> {
+                try {
+                    float v = animation.getAnimatedFraction();
+                    LatLng newPosition = latLngInterpolator.interpolate(v, startPosition, endPosition);
+                    movingMarker.setPosition(newPosition);
+                    movingMarker.setRotation(computeRotation(v, startRotation, endMarker.getRotation()));
+                } catch (Exception ex) {
+                    Log.i("MapPresenter", ex.getLocalizedMessage());
+                }
+            });
+
+            valueAnimator.start();
+        }
+    }
+    private static float computeRotation(float fraction, float start, float end) {
+        float normalizeEnd = end - start; // rotate start to 0
+        float normalizedEndAbs = (normalizeEnd + 360) % 360;
+
+        float direction = (normalizedEndAbs > 180) ? -1 : 1; // -1 = anticlockwise, 1 = clockwise
+        float rotation;
+        if (direction > 0) {
+            rotation = normalizedEndAbs;
+        } else {
+            rotation = normalizedEndAbs - 360;
+        }
+
+        float result = fraction * rotation + start;
+        return (result + 360) % 360;
+    }
+
+
+    private interface LatLngInterpolator {
+        LatLng interpolate(float fraction, LatLng a, LatLng b);
+
+        class LinearFixed implements LatLngInterpolator {
+            @Override
+            public LatLng interpolate(float fraction, LatLng a, LatLng b) {
+                double lat = (b.latitude - a.latitude) * fraction + a.latitude;
+                double lngDelta = b.longitude - a.longitude;
+                // Take the shortest path across the 180th meridian.
+                if (Math.abs(lngDelta) > 180) {
+                    lngDelta -= Math.signum(lngDelta) * 360;
+                }
+                double lng = lngDelta * fraction + a.longitude;
+                return new LatLng(lat, lng);
+            }
+        }
+    }
+
+
+
+
 
 
 

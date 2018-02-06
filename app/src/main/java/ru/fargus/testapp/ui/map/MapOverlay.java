@@ -6,12 +6,10 @@ import android.graphics.Paint;
 import android.graphics.Point;
 //import com.google.android.maps.Overlay;
 
-/**
- * Created by Дмитрий on 05.02.2018.
- */
 
 //http://ddewaele.github.io/GoogleMapsV2WithActionBarSherlock/part3
 class MapOverlay {
+//    extends com.google.android.maps.Overlay
 //        extends Overlay
 //
 //    public MapOverlay(){
