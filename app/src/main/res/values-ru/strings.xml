@@ -4,6 +4,7 @@
     <string name="title_activity_search">Поиск</string>
 
 
+    <string name="search_fragment_empty_data">Не указан пункт отправления или прибытия</string>
     <string name="search_fragment_departure_text">Город отправления</string>
     <string name="search_fragment_arrival_text">Город назначения</string>
     <string name="search_fragment_find_text">Поиск</string>

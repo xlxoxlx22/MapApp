@@ -12,11 +12,12 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import org.parceler.Parcels;
 
@@ -81,9 +82,15 @@ public class MapActivity extends AppCompatActivity implements IMapView, OnMapRea
 
         mArrivalPoint = mMapPresenter.getArrivalPoint(arrivalCity);
         mDeparturePoint = mMapPresenter.getDeparturePoint(departureCity);
-        mMapPresenter.buildRoutePoints(mDeparturePoint, mArrivalPoint);
+        mMapView.moveCamera(CameraUpdateFactory.newLatLngZoom(mDeparturePoint, 2));
 
-        mMapView.moveCamera(CameraUpdateFactory.newLatLng(mDeparturePoint));
+
+        View arrivalLayout = getLayoutInflater().inflate(R.layout.map_marker_layout, null);
+        View departureLayout = getLayoutInflater().inflate(R.layout.map_marker_layout, null);
+        mMapView.addMarker(mMapPresenter.setAirportMarker(mArrivalPoint, mMapPresenter.getIataCode(arrivalCity), arrivalLayout));
+        mMapView.addMarker(mMapPresenter.setAirportMarker(mDeparturePoint, mMapPresenter.getIataCode(departureCity), departureLayout));
+
+        mMapPresenter.buildRoutePoints(mDeparturePoint, mArrivalPoint);
     }
 
 
@@ -101,21 +108,13 @@ public class MapActivity extends AppCompatActivity implements IMapView, OnMapRea
 
     @Override
     public void buildRouteOnMap(List<LatLng> points) {
-        Polyline route = mMapView.addPolyline(mMapPresenter.setRouteForPoints(points));
-        mMapPresenter.setRouteStyle(route);
 
+        Polyline polyline = mMapView.addPolyline(new PolylineOptions().addAll(points));
+        mMapPresenter.setPolylineStyle(polyline);
 
-        View arrivalLayout = getLayoutInflater().inflate(R.layout.map_marker_layout, null);
-        View departureLayout = getLayoutInflater().inflate(R.layout.map_marker_layout, null);
-        Marker endPoint = mMapView.addMarker(mMapPresenter.addMapMarker(mArrivalPoint, mMapPresenter.getIataCode(arrivalCity), arrivalLayout));
-        Marker startPoint = mMapView.addMarker(mMapPresenter.addMapMarker(mDeparturePoint, mMapPresenter.getIataCode(departureCity), departureLayout));
-        Marker planeMarker = mMapView.addMarker(new MarkerOptions()
-                .position(startPoint.getPosition())
-                .anchor(1.0f , 1.0f)
-                .zIndex(1.0f)
-                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_plane)));
+        Marker marker = mMapView.addMarker(new MarkerOptions().position(points.get(0)));
+        mMapPresenter.setMarkerMovingStyle(marker, points.get(1));
 
-        mMapPresenter.animateMarker(points, planeMarker);
-
+        mMapPresenter.animateMarkerMoveForRoute(marker, points);
     }
 }

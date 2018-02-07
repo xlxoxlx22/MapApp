@@ -67,18 +67,13 @@ public class SearchFragment extends Fragment implements ISearchView {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        mSearchPresenter.detachView();
         mViewsUnbinder.unbind();
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mSearchPresenter.detachView();
     }
 
 
@@ -100,7 +95,7 @@ public class SearchFragment extends Fragment implements ISearchView {
         mSearchPresenter.addDisposable(
                 RxView.clicks(mFindFlightsButton)
                         .debounce(250, TimeUnit.MILLISECONDS)
-                        .subscribe(o -> mSearchPresenter.findFlight())
+                        .subscribe(event -> mSearchPresenter.findFlight())
         );
     }
 
@@ -134,8 +129,11 @@ public class SearchFragment extends Fragment implements ISearchView {
     }
 
     @Override
-    public void showToastMessage(String errorMessage) {
-        ToastHelper.showToastMessage(getActivity(), errorMessage);
+    public void showToastMessage(final String errorMessage) {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> ToastHelper.showToastMessage(getActivity(), errorMessage));
+        }
+
     }
 
     @Override

@@ -7,9 +7,10 @@
     <string name="search_fragment_departure_text">Departure city</string>
     <string name="search_fragment_arrival_text">Arrival city</string>
     <string name="search_fragment_find_text">Search</string>
+    <string name="search_fragment_empty_data">Please, set all data</string>
     <string name="list_item_name_text">Title</string>
     <string name="list_item_code_text">Code</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+
 </resources>
