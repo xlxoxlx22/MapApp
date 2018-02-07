@@ -16,9 +16,7 @@ public class MapConfig {
 
     public static final String MAP_ARRIVAL_PARAM = "arrival";
     public static final String MAP_DEPARTURE_PARAM = "departure";
-    public static final long MAP_MARKER_MOVEMENT_ANIMATION_DURATION = 5000;
-    public static final long MAP_MARKER_MOVEMENT_ANIMATION_STEP_DURATION = 100;
-    public static final long MAP_MARKER_ROTATE_ANIMATION_DURATION = 2000;
+    public static final long MAP_MARKER_MOVEMENT_ANIMATION_DURATION = 7000;
 
     public static final int MAP_PATTERN_GAP_LENGTH_PX = 12;
     public static final int MAP_POLYLINE_STROKE_WIDTH_PX = 10;

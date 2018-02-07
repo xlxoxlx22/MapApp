@@ -1,14 +1,20 @@
 package ru.fargus.testapp.ui.map;
 
 import android.animation.ValueAnimator;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
@@ -49,11 +55,6 @@ public class MapPresenter<T extends IMapView> implements BasePresenter<T> {
         mCompositeDisposable = new CompositeDisposable();
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public void attachView(T baseView) {
-        mView = baseView;
-    }
 
     @Override
     public void detachView() {
@@ -73,39 +74,6 @@ public class MapPresenter<T extends IMapView> implements BasePresenter<T> {
     }
 
     // Getters
-    public LatLng getMiddlePoint(Location location1, Location location2) {
-
-        double lat1 = Math.toRadians(location1.getLat());
-        double lat2 = Math.toRadians(location2.getLat());
-        double lon1 = Math.toRadians(location1.getLon());
-        double dLon = Math.toRadians(location2.getLon() - location1.getLon());
-
-        double Bx = Math.cos(lat2) * Math.cos(dLon);
-        double By = Math.cos(lat2) * Math.sin(dLon);
-        double middleLat = Math.atan2(Math.sin(lat1) + Math.sin(lat2),
-                Math.sqrt((Math.cos(lat1) + Bx) * (Math.cos(lat1) + Bx) + By * By));
-        double middleLon = lon1 + Math.atan2(By, Math.cos(lat1) + Bx);
-
-        return new LatLng(middleLat, middleLon);
-    }
-
-
-    private float angleFromCoordinate(double lat1, double long1, double lat2,
-                                      double long2) {
-        double dLon = (long2 - long1);
-
-        double y = Math.sin(dLon) * Math.cos(lat2);
-        double x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1)
-                * Math.cos(lat2) * Math.cos(dLon);
-
-        double brng = Math.atan2(x, y);
-
-        brng = Math.toDegrees(brng);
-        brng = (brng + 360) % 360;
-        brng = 360 - brng;
-        return (float) brng;
-    }
-
     public String getIataCode(City city) {
         if (city.getIata().size() > 0) {
             return city.getIata().get(0);
@@ -124,8 +92,7 @@ public class MapPresenter<T extends IMapView> implements BasePresenter<T> {
         return new LatLng(arrivalLocation.getLat(), arrivalLocation.getLon());
     }
 
-
-
+    // Setters
     public void setPolylineStyle(Polyline polyline) {
         polyline.setZIndex(0.5f);
         polyline.setColor(Color.BLUE);
@@ -134,14 +101,22 @@ public class MapPresenter<T extends IMapView> implements BasePresenter<T> {
         polyline.setWidth(MapConfig.MAP_POLYLINE_STROKE_WIDTH_PX);
     }
 
-    public void setMarkerMovingStyle(Marker marker, LatLng end) {
-        marker.setZIndex(1.0f);
-        marker.setAnchor(1.0f, 1.0f);
-        marker.setRotation((float) MapUtils.computeAngleBetween(marker.getPosition(), end));
-//        marker.setRotation(-((float) SphericalUtil.computeHeading(marker.getPosition(), end)));
-        marker.setIcon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_plane));
+
+    // Создание маркера для начальной или конечной точки маршрута
+    public MarkerOptions setAirportMarker(LatLng point, String title, View markerView) {
+        return new MarkerOptions()
+                .position(point)
+                .zIndex(0.5f)
+                .icon(BitmapDescriptorFactory.fromBitmap(buildAirportMarkerBitmap(markerView, title)));
     }
 
+    public MarkerOptions setPlaneMarker(LatLng point, View markerView) {
+        return new MarkerOptions()
+                .position(point)
+                .zIndex(1.0f)
+                .anchor(0.5f, 0.5f)
+                .icon(BitmapDescriptorFactory.fromBitmap(buildPlaneMarkerBitmap(markerView)));
+    }
 
 
 
@@ -162,19 +137,22 @@ public class MapPresenter<T extends IMapView> implements BasePresenter<T> {
     }
 
 
-    // Создание маркера для начальной или конечной точки маршрута
-    public MarkerOptions setAirportMarker(LatLng point, String title, View markerView) {
-        return new MarkerOptions()
-                .position(point)
-                .zIndex(0.5f)
-                .icon(BitmapDescriptorFactory.fromBitmap(buildAirportMarkerBitmap(markerView, title)));
-    }
 
     private Bitmap buildAirportMarkerBitmap(View markerLayout, String title) {
 
         TextView markerRating = (TextView) markerLayout.findViewById(R.id.map_city_iata_code);
         markerRating.setText(title);
 
+        markerLayout.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        markerLayout.layout(0, 0, markerLayout.getMeasuredWidth(), markerLayout.getMeasuredHeight());
+
+        final Bitmap bitmap = Bitmap.createBitmap(markerLayout.getMeasuredWidth(), markerLayout.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        markerLayout.draw(canvas);
+        return bitmap;
+    }
+
+    private Bitmap buildPlaneMarkerBitmap(View markerLayout) {
         markerLayout.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
         markerLayout.layout(0, 0, markerLayout.getMeasuredWidth(), markerLayout.getMeasuredHeight());
 
@@ -209,7 +187,7 @@ public class MapPresenter<T extends IMapView> implements BasePresenter<T> {
         LatLng pA = SphericalUtil.computeOffset(init, distanceBetween / 2.5, lineHeading1);
         LatLng pB = SphericalUtil.computeOffset(end, distanceBetween / 2.5, lineHeading2);
 
-        for (double t = 0.0; t < 1.01; t += 0.01) {
+        for (double t = 0.0; t < 1.01; t += 0.0001) {
             double arcX = Math.pow((1 - t), 3) * init.latitude
                     + 3 * Math.pow((1 - t), 2) * t * pA.latitude
                     + 3 * (1 - t) * Math.pow(t, 2) * pB.latitude
@@ -219,59 +197,32 @@ public class MapPresenter<T extends IMapView> implements BasePresenter<T> {
                     + 3 * (1 - t) * Math.pow(t, 2) * pB.longitude
                     + Math.pow(t, 3) * end.longitude;
 
-
             curveLatLng = new LatLng(arcX, arcY);
             middlePointsList.add(curveLatLng);
         }
-
         return Observable.just(middlePointsList);
     }
 
 
-    private static float computeRotation(float fraction, float start, float end) {
-        float normalizeEnd = end - start; // rotate start to 0
-        float normalizedEndAbs = (normalizeEnd + 360) % 360;
-
-        float direction = (normalizedEndAbs > 180) ? -1 : 1; // -1 = anticlockwise, 1 = clockwise
-        float rotation;
-        if (direction > 0) {
-            rotation = normalizedEndAbs;
-        } else {
-            rotation = normalizedEndAbs - 360;
-        }
-
-        float result = fraction * rotation + start;
-        return (result + 360) % 360;
-    }
-
-
-
 
     // Animation
+ private LatLng previousPosition;
+    public void animateMarkerMoveAlongRoute(Marker mapMarker, List<LatLng> middlePointsList) {
 
-    private double getAngle(LatLng beginLatLng, LatLng endLatLng) {
-        double f1 = Math.PI * beginLatLng.latitude / 180;
-        double f2 = Math.PI * endLatLng.latitude / 180;
-        double dl = Math.PI * (endLatLng.longitude - beginLatLng.longitude) / 180;
-        return Math.atan2(Math.sin(dl) * Math.cos(f2) , Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(dl));
-    }
-
-
-
-    public void animateMarkerMoveForRoute(Marker mapMarker, List<LatLng> middlePointsList) {
-
+        previousPosition =  mapMarker.getPosition();
         Object[] pointsArray = middlePointsList.toArray();
 
         ValueAnimator markerAnimator = ValueAnimator.ofObject(new LatLngEvaluator(), pointsArray);
-        markerAnimator.setDuration(6000);
+        markerAnimator.setDuration(MapConfig.MAP_MARKER_MOVEMENT_ANIMATION_DURATION);
         markerAnimator.addUpdateListener(valueAnimator -> {
+
             LatLng nextPosition = (LatLng) valueAnimator.getAnimatedValue();
-            float bearing = (float) MapUtils.computeAngleBetween(mapMarker.getPosition(), nextPosition);
-//            float bearing = angleFromCoordinate(mapMarker.getPosition().latitude, mapMarker.getPosition().longitude,
-//                    nextPosition.latitude, nextPosition.longitude);
+            float bearing = MapUtils.getBearing(previousPosition, nextPosition);
 
             mapMarker.setRotation(bearing);
             mapMarker.setPosition(nextPosition);
+
+            previousPosition = nextPosition;
         });
         markerAnimator.start();
     }

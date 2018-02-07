@@ -33,16 +33,10 @@ public class SearchPresenter<T extends ISearchView> implements BasePresenter<T> 
     @SuppressWarnings("unchecked")
     public SearchPresenter(T view){
         mView = view;
-        // TODO потом перейти на dagger2
         mCompositeDisposable = new CompositeDisposable();
         mApiService =  RetrofitClient.getInstance().getApi();
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public void attachView(T baseView) {
-        mView = baseView;
-    }
 
     @Override
     public void detachView() {
@@ -101,9 +95,6 @@ public class SearchPresenter<T extends ISearchView> implements BasePresenter<T> 
         mExtraParamsBundle.putParcelable(key, Parcels.wrap(value));
     }
 
-    public void clearExtraParams(){
-        mExtraParamsBundle.clear();
-    }
 
     public Bundle getExtraParamsBundle(){
         if (mExtraParamsBundle != null) {

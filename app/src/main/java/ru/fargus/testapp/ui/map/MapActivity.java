@@ -10,12 +10,9 @@ import android.view.View;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
@@ -33,18 +30,13 @@ import ru.fargus.testapp.ui.map.constants.MapConfig;
 
 public class MapActivity extends AppCompatActivity implements IMapView, OnMapReadyCallback {
 
-
-    @BindBitmap(R.mipmap.ic_plane) Bitmap mMapMarker;
-
-
     GoogleMap mMapView;
-    private City arrivalCity;
-    private City departureCity;
-    private LatLng mArrivalPoint;
-    private LatLng mDeparturePoint;
-    private Projection mProjection;
+    private City mArrivalCity;
+    private City mDepartureCity;
+    private Marker mPlaneMarker;
     private Unbinder mViewsUnbinder;
     private MapPresenter mMapPresenter;
+    @BindBitmap(R.mipmap.ic_plane) Bitmap mMapMarker;
 
 
     public static void buildIntent(Activity activity, Bundle extraParams) {
@@ -65,12 +57,11 @@ public class MapActivity extends AppCompatActivity implements IMapView, OnMapRea
         mMapPresenter = new MapPresenter(this);
         if (intent != null && intent.getExtras() != null) {
             Bundle arguments = intent.getExtras();
-            arrivalCity = Parcels.unwrap(arguments.getParcelable(MapConfig.MAP_ARRIVAL_PARAM));
-            departureCity = Parcels.unwrap(arguments.getParcelable(MapConfig.MAP_DEPARTURE_PARAM));
+            mArrivalCity = Parcels.unwrap(arguments.getParcelable(MapConfig.MAP_ARRIVAL_PARAM));
+            mDepartureCity = Parcels.unwrap(arguments.getParcelable(MapConfig.MAP_DEPARTURE_PARAM));
         }
 
-        SupportMapFragment mapFragment =
-                (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
     }
 
@@ -80,15 +71,18 @@ public class MapActivity extends AppCompatActivity implements IMapView, OnMapRea
     public void onMapReady(GoogleMap googleMap) {
         mMapView = googleMap;
 
-        mArrivalPoint = mMapPresenter.getArrivalPoint(arrivalCity);
-        mDeparturePoint = mMapPresenter.getDeparturePoint(departureCity);
-        mMapView.moveCamera(CameraUpdateFactory.newLatLngZoom(mDeparturePoint, 2));
+        LatLng mArrivalPoint = mMapPresenter.getArrivalPoint(mArrivalCity);
+        LatLng mDeparturePoint = mMapPresenter.getDeparturePoint(mDepartureCity);
+        mMapView.moveCamera(CameraUpdateFactory.newLatLngZoom(mDeparturePoint, 3));
 
 
-        View arrivalLayout = getLayoutInflater().inflate(R.layout.map_marker_layout, null);
-        View departureLayout = getLayoutInflater().inflate(R.layout.map_marker_layout, null);
-        mMapView.addMarker(mMapPresenter.setAirportMarker(mArrivalPoint, mMapPresenter.getIataCode(arrivalCity), arrivalLayout));
-        mMapView.addMarker(mMapPresenter.setAirportMarker(mDeparturePoint, mMapPresenter.getIataCode(departureCity), departureLayout));
+        View planeLayout = getLayoutInflater().inflate(R.layout.plane_marker_layout, null);
+        View arrivalLayout = getLayoutInflater().inflate(R.layout.airport_marker_layout, null);
+        View departureLayout = getLayoutInflater().inflate(R.layout.airport_marker_layout, null);
+
+        mPlaneMarker = mMapView.addMarker(mMapPresenter.setPlaneMarker(mDeparturePoint,  planeLayout));
+        mMapView.addMarker(mMapPresenter.setAirportMarker(mArrivalPoint, mMapPresenter.getIataCode(mArrivalCity), arrivalLayout));
+        mMapView.addMarker(mMapPresenter.setAirportMarker(mDeparturePoint, mMapPresenter.getIataCode(mDepartureCity), departureLayout));
 
         mMapPresenter.buildRoutePoints(mDeparturePoint, mArrivalPoint);
     }
@@ -108,13 +102,9 @@ public class MapActivity extends AppCompatActivity implements IMapView, OnMapRea
 
     @Override
     public void buildRouteOnMap(List<LatLng> points) {
-
         Polyline polyline = mMapView.addPolyline(new PolylineOptions().addAll(points));
         mMapPresenter.setPolylineStyle(polyline);
 
-        Marker marker = mMapView.addMarker(new MarkerOptions().position(points.get(0)));
-        mMapPresenter.setMarkerMovingStyle(marker, points.get(1));
-
-        mMapPresenter.animateMarkerMoveForRoute(marker, points);
+        mMapPresenter.animateMarkerMoveAlongRoute(mPlaneMarker, points);
     }
 }
