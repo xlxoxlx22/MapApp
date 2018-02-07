@@ -13,8 +13,8 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import ru.fargus.testapp.model.City;
-import ru.fargus.testapp.model.RequestObject;
-import ru.fargus.testapp.model.RequestResponse;
+import ru.fargus.testapp.network.model.RequestObject;
+import ru.fargus.testapp.network.model.RequestResponse;
 import ru.fargus.testapp.network.ApiService;
 import ru.fargus.testapp.network.RetrofitClient;
 import ru.fargus.testapp.ui.base.BasePresenter;
@@ -24,7 +24,7 @@ import ru.fargus.testapp.ui.search.constants.SearchType;
  * Created by Дмитрий on 31.01.2018.
  */
 
-public class SearchPresenter<T extends SearchView> implements BasePresenter<T> {
+public class SearchPresenter<T extends ISearchView> implements BasePresenter<T> {
 
     private T mView;
     private ApiService mApiService;

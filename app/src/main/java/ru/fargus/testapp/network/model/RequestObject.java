@@ -1,4 +1,4 @@
-package ru.fargus.testapp.model;
+package ru.fargus.testapp.network.model;
 
 import com.google.gson.annotations.SerializedName;
 

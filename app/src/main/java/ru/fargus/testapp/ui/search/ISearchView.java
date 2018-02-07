@@ -11,7 +11,7 @@ import ru.fargus.testapp.ui.search.constants.SearchType;
  * Created by Дмитрий on 31.01.2018.
  */
 
-public interface SearchView extends BaseView {
+public interface ISearchView extends BaseView {
 
     void openMapActivity();
     CitiesAdapter getAdapterForSearchType(SearchType searchType);

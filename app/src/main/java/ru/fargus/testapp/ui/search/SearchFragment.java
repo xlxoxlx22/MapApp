@@ -27,7 +27,7 @@ import ru.fargus.testapp.ui.search.adapter.CitiesAdapter;
 import ru.fargus.testapp.ui.search.constants.SearchConfig;
 import ru.fargus.testapp.ui.search.constants.SearchType;
 
-public class SearchFragment extends Fragment implements SearchView{
+public class SearchFragment extends Fragment implements ISearchView {
 
     private View mView;
     private Unbinder mViewsUnbinder;

@@ -3,11 +3,8 @@ package ru.fargus.testapp.ui.map;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.location.Location;
-import android.location.LocationManager;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -23,17 +20,29 @@ import com.google.android.gms.maps.model.Polyline;
 
 import org.parceler.Parcels;
 
+import java.util.List;
+
+import butterknife.BindBitmap;
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
 import ru.fargus.testapp.R;
 import ru.fargus.testapp.helpers.ToastHelper;
 import ru.fargus.testapp.model.City;
 import ru.fargus.testapp.ui.map.constants.MapConfig;
 
-public class MapActivity extends FragmentActivity implements MapView, OnMapReadyCallback {
+public class MapActivity extends AppCompatActivity implements IMapView, OnMapReadyCallback {
 
-    private GoogleMap mMap;
+
+    @BindBitmap(R.mipmap.ic_plane) Bitmap mMapMarker;
+
+
+    GoogleMap mMapView;
     private City arrivalCity;
-    private Bitmap mMapMarker;
     private City departureCity;
+    private LatLng mArrivalPoint;
+    private LatLng mDeparturePoint;
+    private Projection mProjection;
+    private Unbinder mViewsUnbinder;
     private MapPresenter mMapPresenter;
 
 
@@ -49,6 +58,7 @@ public class MapActivity extends FragmentActivity implements MapView, OnMapReady
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+        mViewsUnbinder = ButterKnife.bind(this);
 
         Intent intent = getIntent();
         mMapPresenter = new MapPresenter(this);
@@ -58,9 +68,8 @@ public class MapActivity extends FragmentActivity implements MapView, OnMapReady
             departureCity = Parcels.unwrap(arguments.getParcelable(MapConfig.MAP_DEPARTURE_PARAM));
         }
 
-        mMapMarker = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_plane);
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+        SupportMapFragment mapFragment =
+                (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
     }
 
@@ -68,38 +77,45 @@ public class MapActivity extends FragmentActivity implements MapView, OnMapReady
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
+        mMapView = googleMap;
 
-        LatLng arrivalPoint = mMapPresenter.getArrivalPoint(arrivalCity);
-        LatLng departurePoint = mMapPresenter.getDeparturePoint(departureCity);
-        Polyline route = mMap.addPolyline(mMapPresenter.getRouteForPoints(departurePoint, arrivalPoint));
+        mArrivalPoint = mMapPresenter.getArrivalPoint(arrivalCity);
+        mDeparturePoint = mMapPresenter.getDeparturePoint(departureCity);
+        mMapPresenter.buildRoutePoints(mDeparturePoint, mArrivalPoint);
 
-        mMapPresenter.setRouteStyle(route);
-
-        Location source = new Location(LocationManager.GPS_PROVIDER);
-        source.setLatitude(departurePoint.latitude);
-        source.setLongitude(departurePoint.longitude);
-
-        View arrivalLayout = getLayoutInflater().inflate(R.layout.map_marker_layout, null);
-        View departureLayout = getLayoutInflater().inflate(R.layout.map_marker_layout, null);
-        Marker startPoint = mMap.addMarker(mMapPresenter.addMapMarker(arrivalPoint, mMapPresenter.getIataCode(arrivalCity), arrivalLayout));
-        Marker endPoint = mMap.addMarker(mMapPresenter.addMapMarker(departurePoint, mMapPresenter.getIataCode(departureCity), departureLayout));
-        Marker planeMarker = mMap.addMarker(new MarkerOptions()
-                .position(startPoint.getPosition())
-                .anchor(0.0f , 0.0f)
-                .zIndex(1.0f)
-                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_plane)));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(mMapPresenter.getMiddlePoint(departureCity.getLocation(), arrivalCity.getLocation())));
-
-        mMapPresenter.animateMarker(endPoint, planeMarker);
-
-//        mMapPresenter.moveMarkerAnimation(mMap, mMapMarker,departurePoint, arrivalPoint, 5000);
-
+        mMapView.moveCamera(CameraUpdateFactory.newLatLng(mDeparturePoint));
     }
 
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mViewsUnbinder.unbind();
+    }
 
     @Override
     public void showToastMessage(String errorMessage) {
         ToastHelper.showToastMessage(this, errorMessage);
+    }
+
+    @Override
+    public void buildRouteOnMap(List<LatLng> points) {
+        Polyline route = mMapView.addPolyline(mMapPresenter.setRouteForPoints(points));
+        mMapPresenter.setRouteStyle(route);
+
+
+        View arrivalLayout = getLayoutInflater().inflate(R.layout.map_marker_layout, null);
+        View departureLayout = getLayoutInflater().inflate(R.layout.map_marker_layout, null);
+        Marker endPoint = mMapView.addMarker(mMapPresenter.addMapMarker(mArrivalPoint, mMapPresenter.getIataCode(arrivalCity), arrivalLayout));
+        Marker startPoint = mMapView.addMarker(mMapPresenter.addMapMarker(mDeparturePoint, mMapPresenter.getIataCode(departureCity), departureLayout));
+        Marker planeMarker = mMapView.addMarker(new MarkerOptions()
+                .position(startPoint.getPosition())
+                .anchor(1.0f , 1.0f)
+                .zIndex(1.0f)
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_plane)));
+
+        mMapPresenter.animateMarker(points, planeMarker);
+
     }
 }

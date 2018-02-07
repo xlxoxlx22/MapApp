@@ -16,7 +16,7 @@ class MapOverlay {
 //
 //    }
 //
-//    public void draw(Canvas canvas, MapView mapv, boolean shadow){
+//    public void draw(Canvas canvas, IMapView mapv, boolean shadow){
 //        super.draw(canvas, mapv, shadow);
 //        //Configuring the paint brush
 //        Paint mPaint = new Paint();

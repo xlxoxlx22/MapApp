@@ -1,9 +1,12 @@
-package ru.fargus.testapp.model;
+package ru.fargus.testapp.network.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
+
+import ru.fargus.testapp.model.City;
+import ru.fargus.testapp.model.Hotel;
 
 /**
  * Created by Дмитрий on 31.01.2018.

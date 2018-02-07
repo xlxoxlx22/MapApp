@@ -1,25 +1,23 @@
 package ru.fargus.testapp.ui.map;
 
+import android.animation.PointFEvaluator;
 import android.animation.ValueAnimator;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Point;
-import android.graphics.Rect;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
@@ -32,19 +30,23 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import ru.fargus.testapp.R;
 import ru.fargus.testapp.model.City;
 import ru.fargus.testapp.model.Location;
 import ru.fargus.testapp.ui.base.BasePresenter;
 import ru.fargus.testapp.ui.map.constants.MapConfig;
+import ru.fargus.testapp.ui.map.util.DoubleArrayEvaluator;
 
 /**
  * Created by Дмитрий on 31.01.2018.
  */
 
-public class MapPresenter<T extends MapView> implements BasePresenter<T> {
+public class MapPresenter<T extends IMapView> implements BasePresenter<T> {
 
     private T mView;
     private LatLng preLatLng;
@@ -142,21 +144,31 @@ public class MapPresenter<T extends MapView> implements BasePresenter<T> {
 
 
     // set Route params
-    public PolylineOptions getRouteForPoints(LatLng departurePoint, LatLng arrivalPoint) {
-        mRoutePointsList.clear();
-        mRoutePointsList.add(departurePoint);
-        mRoutePointsList.add(arrivalPoint);
-
+    public PolylineOptions setRouteForPoints(List<LatLng> points) {
         return new PolylineOptions()
-                .add(departurePoint, arrivalPoint)
-                .color(Color.BLUE)
-                .geodesic(true);
+                .addAll(points)
+                .color(Color.BLUE);
     }
 
     public void setRouteStyle(Polyline polyline){
         polyline.setJointType(JointType.ROUND);
         polyline.setPattern(MapConfig.PATTERN_DOTTED);
         polyline.setWidth(MapConfig.MAP_POLYLINE_STROKE_WIDTH_PX);
+    }
+
+    public void buildRoutePoints(LatLng startPoint, LatLng endPoint){
+        mRoutePointsList.clear();
+        mRoutePointsList.add(startPoint);
+        mRoutePointsList.add(endPoint);
+        Observable.just(mRoutePointsList)
+                .flatMap(latLngs -> interpolateRoutePoints(latLngs))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(latLngs -> {
+                    if (latLngs.size() > 0) {
+                        mView.buildRouteOnMap(latLngs);
+                    }
+                }, throwable -> mView.showToastMessage(throwable.getLocalizedMessage()));
     }
 
 
@@ -193,32 +205,56 @@ public class MapPresenter<T extends MapView> implements BasePresenter<T> {
 
 
 
+    private Observable<List<LatLng>> interpolateRoutePoints(List<LatLng> points){
+        List<LatLng> routePoints = new ArrayList<>();
+        LatLng startPosition = points.get(0);
+        LatLng endPosition = points.get(points.size()-1);
+        Interpolator interpolator = new LinearInterpolator();
+
+        routePoints.add(startPosition);
+
+        for (double t = 0.0; t < 1.01; t += 0.11) {
+            double lat = t * endPosition.latitude + (1-t) * startPosition.latitude;
+            double lng = t * endPosition.longitude + (1-t) * startPosition.longitude;
+
+            LatLng intermediatePosition = new LatLng(lat, lng);
+            routePoints.add(intermediatePosition);
+        }
+
+        routePoints.add(endPosition);
+        return Observable.just(routePoints);
+    }
 
 
-    public void animateMarker(Marker endMarker, final Marker movingMarker) {
+    public void animateMarker(List<LatLng> points, Marker movingMarker) {
         if (movingMarker != null) {
 
-            final LatLng endPosition = endMarker.getPosition();
-            final LatLng startPosition = movingMarker.getPosition();
-            final float startRotation = movingMarker.getRotation();
+            LatLng lastPoint = points.get(points.size() - 1);
 
-            final LatLngInterpolator latLngInterpolator = new LatLngInterpolator.LinearFixed();
-            ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, 1);
-            valueAnimator.setDuration(1000); // duration 1 second
-            valueAnimator.setInterpolator(new LinearInterpolator());
-            valueAnimator.addUpdateListener(animation -> {
-                try {
-                    float v = animation.getAnimatedFraction();
-                    LatLng newPosition = latLngInterpolator.interpolate(v, startPosition, endPosition);
-                    movingMarker.setPosition(newPosition);
-                    movingMarker.setRotation(computeRotation(v, startRotation, endMarker.getRotation()));
-                } catch (Exception ex) {
-                    Log.i("MapPresenter", ex.getLocalizedMessage());
-                }
-            });
-
-            valueAnimator.start();
+                double[] startValues = new double[]{movingMarker.getPosition().latitude, movingMarker.getPosition().longitude};
+                double[] endValues = new double[]{lastPoint.latitude, lastPoint.longitude};
+                ValueAnimator latLngAnimator = ValueAnimator.ofObject(new DoubleArrayEvaluator(), startValues, endValues);
+                latLngAnimator.setDuration(200);
+                latLngAnimator.setInterpolator(new DecelerateInterpolator());
+                latLngAnimator.addUpdateListener(animation ->  {
+                    for ( int i = 1; i < points.size(); i++) {
+                        double[] animatedValue = (double[]) animation.getAnimatedValue();
+                        movingMarker.setPosition(new LatLng(animatedValue[0], animatedValue[1]));
+                    }
+                });
+                latLngAnimator.start();
         }
+
+//            ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, 1);
+//            valueAnimator.setDuration(MapConfig.MAP_MARKER_MOVEMENT_ANIMATION_DURATION); // duration 1 second
+//            valueAnimator.setInterpolator(new LinearInterpolator());
+//            valueAnimator.addUpdateListener(animation -> {
+//                for ( LatLng point : points) {
+//                    movingMarker.setPosition(point);
+//                }
+//            });
+//            valueAnimator.start();
+
     }
     private static float computeRotation(float fraction, float start, float end) {
         float normalizeEnd = end - start; // rotate start to 0
@@ -237,177 +273,44 @@ public class MapPresenter<T extends MapView> implements BasePresenter<T> {
     }
 
 
-    private interface LatLngInterpolator {
-        LatLng interpolate(float fraction, LatLng a, LatLng b);
-
-        class LinearFixed implements LatLngInterpolator {
-            @Override
-            public LatLng interpolate(float fraction, LatLng a, LatLng b) {
-                double lat = (b.latitude - a.latitude) * fraction + a.latitude;
-                double lngDelta = b.longitude - a.longitude;
-                // Take the shortest path across the 180th meridian.
-                if (Math.abs(lngDelta) > 180) {
-                    lngDelta -= Math.signum(lngDelta) * 360;
-                }
-                double lng = lngDelta * fraction + a.longitude;
-                return new LatLng(lat, lng);
-            }
-        }
-    }
-
-
-
-
-
-
 
 
     // Animation
 
-    public void moveMarkerAnimation(final GoogleMap map, Bitmap icon, final LatLng beginLatLng, final LatLng endLatLng, final long duration) {
-        final Handler handler = new Handler();
-        final long startTime = SystemClock.uptimeMillis();
+        public void animateMarker(Marker m,final boolean hideMarke) {
+            final Handler handler = new Handler();
+            final long start = SystemClock.uptimeMillis();
+            final long duration = 5000;
 
-        final Interpolator interpolator = new LinearInterpolator();
+            final LatLng startLatLng = mRoutePointsList.get(0);
+            final LatLng toPosition = mRoutePointsList.get(mRoutePointsList.size() -1);
+            final Interpolator interpolator = new LinearInterpolator();
 
-        // set car bearing for current part of path
-        mMarkerIcon = icon;
-        mPlaneIcon = map.addMarker(new MarkerOptions()
-                .position(beginLatLng)
-                .anchor(0.0f , 0.0f)
-                .zIndex(1.0f)
-                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_plane)));
-        float angleDeg = (float)(180 * getAngle(beginLatLng, endLatLng) / Math.PI);
-        Matrix matrix = new Matrix();
-        matrix.postRotate(angleDeg);
-        mPlaneIcon.setIcon(BitmapDescriptorFactory.fromBitmap(Bitmap.createBitmap(mMarkerIcon, 0, 0, mMarkerIcon.getWidth(), mMarkerIcon.getHeight(), matrix, true)));
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    long elapsed = SystemClock.uptimeMillis() - start;
+                    float t = interpolator.getInterpolation((float) elapsed
+                            / duration);
+                    double lng = t * toPosition.longitude + (1 - t)
+                            * startLatLng.longitude;
+                    double lat = t * toPosition.latitude + (1 - t)
+                            * startLatLng.latitude;
+                    m.setPosition(new LatLng(lat, lng));
 
-
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                // calculate phase of animation
-                long elapsed = SystemClock.uptimeMillis() - startTime;
-                float t = interpolator.getInterpolation((float) elapsed / duration);
-                // calculate new position for marker
-                double lat = (endLatLng.latitude - beginLatLng.latitude) * t + beginLatLng.latitude;
-                double lngDelta = endLatLng.longitude - beginLatLng.longitude;
-
-                if (Math.abs(lngDelta) > 180) {
-                    lngDelta -= Math.signum(lngDelta) * 360;
+                    if (t < 1.0) {
+                        // Post again 16ms later.
+                        handler.postDelayed(this, 16);
+                    } else {
+                        if (hideMarke) {
+                            m.setVisible(false);
+                        } else {
+                            m.setVisible(true);
+                        }
+                    }
                 }
-                double lng = lngDelta * t + beginLatLng.longitude;
-
-                mPlaneIcon.setPosition(new LatLng(lat, lng));
-
-                // if not end of line segment of path
-                if (t < 1.0) {
-                    // call next marker position
-                    handler.postDelayed(this, 16);
-                } else {
-                    // call turn animation
-                    nextTurnAnimation();
-                }
-            }
-        });
-    }
-
-
-    private void moveMarkerAnimation(final Marker marker, final LatLng beginLatLng, final LatLng endLatLng, final long duration) {
-        final Handler handler = new Handler();
-        mIndexCurrentPoint = 0;
-        final long startTime = SystemClock.uptimeMillis();
-
-        final Interpolator interpolator = new LinearInterpolator();
-
-        // set car bearing for current part of path
-        float angleDeg = (float)(180 * getAngle(beginLatLng, endLatLng) / Math.PI);
-        Matrix matrix = new Matrix();
-        matrix.postRotate(angleDeg);
-        marker.setIcon(BitmapDescriptorFactory.fromBitmap(Bitmap.createBitmap(mMarkerIcon, 0, 0, mMarkerIcon.getWidth(), mMarkerIcon.getHeight(), matrix, true)));
-
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                // calculate phase of animation
-                long elapsed = SystemClock.uptimeMillis() - startTime;
-                float t = interpolator.getInterpolation((float) elapsed / duration);
-                // calculate new position for marker
-                double lat = (endLatLng.latitude - beginLatLng.latitude) * t + beginLatLng.latitude;
-                double lngDelta = endLatLng.longitude - beginLatLng.longitude;
-
-                if (Math.abs(lngDelta) > 180) {
-                    lngDelta -= Math.signum(lngDelta) * 360;
-                }
-                double lng = lngDelta * t + beginLatLng.longitude;
-
-                marker.setPosition(new LatLng(lat, lng));
-
-                // if not end of line segment of path
-                if (t < 1.0) {
-                    // call next marker position
-                    handler.postDelayed(this, 16);
-                } else {
-                    // call turn animation
-                    nextTurnAnimation();
-                }
-            }
-        });
-    }
-
-
-    private void turnMarkerAnimation(final Marker marker, final float startAngle, final float endAngle, final long duration) {
-        final Handler handler = new Handler();
-        final long startTime = SystemClock.uptimeMillis();
-        final Interpolator interpolator = new LinearInterpolator();
-
-        final float dAndgle = endAngle - startAngle;
-
-        Matrix matrix = new Matrix();
-        matrix.postRotate(startAngle);
-        Bitmap rotatedBitmap = Bitmap.createBitmap(mMarkerIcon, 0, 0, mMarkerIcon.getWidth(), mMarkerIcon.getHeight(), matrix, true);
-        marker.setIcon(BitmapDescriptorFactory.fromBitmap(rotatedBitmap));
-
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-
-                long elapsed = SystemClock.uptimeMillis() - startTime;
-                float t = interpolator.getInterpolation((float) elapsed / duration);
-
-                Matrix m = new Matrix();
-                m.postRotate(startAngle + dAndgle * t);
-                marker.setIcon(BitmapDescriptorFactory.fromBitmap(Bitmap.createBitmap(mMarkerIcon, 0, 0, mMarkerIcon.getWidth(), mMarkerIcon.getHeight(), m, true)));
-
-                if (t < 1.0) {
-                    handler.postDelayed(this, 16);
-                } else {
-                    nextMoveAnimation();
-                }
-            }
-        });
-    }
-
-
-    private void nextTurnAnimation() {
-        mIndexCurrentPoint++;
-
-        if (mIndexCurrentPoint < mRoutePointsList.size() - 1) {
-            LatLng prevLatLng = mRoutePointsList.get(mIndexCurrentPoint - 1);
-            LatLng currLatLng = mRoutePointsList.get(mIndexCurrentPoint);
-            LatLng nextLatLng = mRoutePointsList.get(mIndexCurrentPoint + 1);
-
-            float beginAngle = (float)(180 * getAngle(prevLatLng, currLatLng) / Math.PI);
-            float endAngle = (float)(180 * getAngle(currLatLng, nextLatLng) / Math.PI);
-            turnMarkerAnimation(mPlaneIcon, beginAngle, endAngle, 3000);
+            });
         }
-    }
-
-    private void nextMoveAnimation() {
-        if (mIndexCurrentPoint <  mRoutePointsList.size() - 1) {
-            moveMarkerAnimation(mPlaneIcon, mRoutePointsList.get(mIndexCurrentPoint), mRoutePointsList.get(mIndexCurrentPoint+1), 4000);
-        }
-    }
 
     private double getAngle(LatLng beginLatLng, LatLng endLatLng) {
         double f1 = Math.PI * beginLatLng.latitude / 180;
